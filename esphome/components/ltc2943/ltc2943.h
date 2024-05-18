@@ -1,69 +1,14 @@
 #pragma once
 
+#include "float.h"
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/i2c/i2c.h"
 
-#define BYTESWAP16(n) (((n & 0xFF00) >> 8) | ((n & 0x00FF) << 8))
-
 namespace esphome {
 namespace ltc2943 {
 
-// +------------------------------------------------------------+
-// |                    TABLE 1. Register Map                   |
-// +---------+------+----------------------------+----+---------+
-// | ADDRESS | NAME | DESC                       | RW | DEFAULT |
-// +---------+------+----------------------------+----+---------+
-// |  0x00   |  A   | Status                     | R  |   N/A   |
-// |  0x01   |  B   | Control                    | RW |   0x3C  |
-// |  0x02   |  C   | Accumulated Charge MSB     | RW |   0x7F  |
-// |  0x03   |  D   | Accumulated Charge LSB     | RW |   0xFF  |
-// |  0x04   |  E   | Charge Threshold High MSB  | RW |   0xFF  |
-// |  0x05   |  F   | Charge Threshold High LSB  | RW |   0xFF  |
-// |  0x06   |  G   | Charge Threshold Low MSB   | RW |   0x00  |
-// |  0x07   |  H   | Charge Threshold Low LSB   | RW |   0x00  |
-// |  0x08   |  I   | Voltage MSB                | R  |   0x00  |
-// |  0x09   |  J   | Voltage LSB                | R  |   0x00  |
-// |  0x0A   |  K   | Voltage Threshold High MSB | RW |   0xFF  |
-// |  0x0B   |  L   | Voltage Threshold High LSB | RW |   0xFF  |
-// |  0x0C   |  M   | Voltage Threshold Low MSB  | RW |   0x00  |
-// |  0x0D   |  N   | Voltage Threshold Low LSB  | RW |   0x00  |
-// |  0x0E   |  O   | Current MSB                | R  |   0x00  |
-// |  0x0F   |  P   | Current LSB                | R  |   0x00  |
-// |  0x10   |  Q   | Current Threshold High MSB | RW |   0xFF  |
-// |  0x11   |  R   | Current Threshold High LSB | RW |   0xFF  |
-// |  0x12   |  S   | Current Threshold Low MSB  | RW |   0x00  |
-// |  0x13   |  T   | Current Threshold Low LSB  | RW |   0x00  |
-// |  0x14   |  U   | Temperature MSB            | R  |   0x00  |
-// |  0x15   |  V   | Temperature LSB            | R  |   0x00  |
-// |  0x16   |  W   | Temperature Threshold Hi   | RW |   0xFF  |
-// |  0x17   |  X   | Temperature Threshold Lo   | RW |   0x00  |
-// +---------+------+----------------------------+----+---------+
-
-static const uint8_t LTC2943_REGISTER_STATUS = 0x00;
-static const uint8_t LTC2943_REGISTER_CONTROL = 0x01;
-static const uint8_t LTC2943_REGISTER_ACCUM_CHG_MSB = 0x02;
-static const uint8_t LTC2943_REGISTER_ACCUM_CHG_LSB = 0x03;
-static const uint8_t LTC2943_REGISTER_CHG_THLD_HI_MSB = 0x04;
-static const uint8_t LTC2943_REGISTER_CHG_THLD_HI_LSB = 0x05;
-static const uint8_t LTC2943_REGISTER_CHG_THLD_LO_MSB = 0x06;
-static const uint8_t LTC2943_REGISTER_CHG_THLD_LO_LSB = 0x07;
-static const uint8_t LTC2943_REGISTER_VOLTAGE_MSB = 0x08;
-static const uint8_t LTC2943_REGISTER_VOLTAGE_LSB = 0x09;
-static const uint8_t LTC2943_REGISTER_VOLTAGE_THLD_HI_MSB = 0x0A;
-static const uint8_t LTC2943_REGISTER_VOLTAGE_THLD_HI_LSB = 0x0B;
-static const uint8_t LTC2943_REGISTER_VOLTAGE_THLD_LO_MSB = 0x0C;
-static const uint8_t LTC2943_REGISTER_VOLTAGE_THLD_LO_LSB = 0x0D;
-static const uint8_t LTC2943_REGISTER_CURRENT_MSB = 0x0E;
-static const uint8_t LTC2943_REGISTER_CURRENT_LSB = 0x0F;
-static const uint8_t LTC2943_REGISTER_CURRENT_THLD_HI_MSB = 0x10;
-static const uint8_t LTC2943_REGISTER_CURRENT_THLD_HI_LSB = 0x11;
-static const uint8_t LTC2943_REGISTER_CURRENT_THLD_LO_MSB = 0x12;
-static const uint8_t LTC2943_REGISTER_CURRENT_THLD_LO_LSB = 0x13;
-static const uint8_t LTC2943_REGISTER_TEMPERATURE_MSB = 0x14;
-static const uint8_t LTC2943_REGISTER_TEMPERATURE_LSB = 0x15;
-static const uint8_t LTC2943_REGISTER_TEMPERATURE_THLD_HI = 0x16;
-static const uint8_t LTC2943_REGISTER_TEMPERATURE_THLD_LO = 0x17;
+static const char *LTC2943_ALCC_MODES[3] = {"DISABLED", "CC", "AL"};
 
 enum AlccMode : uint16_t { ALCC_MODE_DISABLED = 0, ALCC_MODE_CHARGE_COMPLETE = 1, ALCC_MODE_ALERT = 2 };
 
@@ -104,34 +49,6 @@ union ControlRegister {
   } __attribute__((packed));
 };
 
-union SplitShort {
-  uint16_t value;
-  struct {
-    uint8_t high;
-    uint8_t low;
-  } __attribute__((packed));
-};
-
-union LTC2943Registers {
-  uint8_t raw[24];
-  struct {
-    StatusRegister status;
-    ControlRegister control;
-    SplitShort raw_accumChg;
-    SplitShort chg_thld_high;
-    SplitShort chg_thld_low;
-    SplitShort raw_voltage;
-    SplitShort voltage_thld_high;
-    SplitShort voltage_thld_low;
-    SplitShort raw_current;
-    SplitShort current_thld_high;
-    SplitShort current_thld_low;
-    SplitShort raw_temperature;
-    uint8_t temperature_thld_high;
-    uint8_t temperature_thld_low;
-  } __attribute__((packed));
-};
-
 class LTC2943Component : public PollingComponent, public i2c::I2CDevice {
  public:
   void setup() override;
@@ -139,36 +56,60 @@ class LTC2943Component : public PollingComponent, public i2c::I2CDevice {
   float get_setup_priority() const override;
   void update() override;
 
-  void set_shunt_resistance_ohm(float shunt_resistance_ohm) { shunt_resistance_ohm_ = shunt_resistance_ohm; }
-  void set_battery_capacity_mah(float battery_capacity_mah) { battery_capacity_mah_ = battery_capacity_mah; }
+  // Configuration Params
+  void set_shunt_resistance_ohm(float value) { shunt_resistance_ohm_ = value; }
+  void set_battery_capacity_mah(float value) { battery_capacity_mah_ = value; }
   void set_alcc_pin_mode(AlccMode mode) { alcc_pin_mode_ = mode; }
   void set_clmb_cnt_prescale_value(CcPrescaleValue value) { clmb_cnt_prescale_value_ = value; }
-
+  // Alert threshold parameters
+  void set_chg_thld_hi(float value) { chg_thld_hi_ = value; }
+  void set_chg_thld_lo(float value) { chg_thld_lo_ = value; }
+  void set_voltage_thld_hi(float value) { voltage_thld_hi_ = value; }
+  void set_voltage_thld_lo(float value) { voltage_thld_lo_ = value; }
+  void set_current_thld_hi(float value) { current_thld_hi_ = value; }
+  void set_current_thld_lo(float value) { current_thld_lo_ = value; }
+  void set_temperature_thld_hi(float value) { temperatre_thld_hi_ = value; }
+  void set_temperature_thld_lo(float value) { temperatre_thld_lo_ = value; }
+  // Sensors
+  void set_battery_soc_sensor(sensor::Sensor *sensor) { bat_soc_sensor_ = sensor; }
   void set_battery_voltage_sensor(sensor::Sensor *sensor) { bat_voltage_sensor_ = sensor; }
-  void set_current_sensor(sensor::Sensor *sensor) { current_sensor_ = sensor; }
+  void set_current_sensor(sensor::Sensor *sensor) { bat_current_sensor_ = sensor; }
   void set_temperature_sensor(sensor::Sensor *sensor) { temperature_sensor_ = sensor; }
   // void set_soc_override(number::Number *number) { soc_override_ = number; }
 
  protected:
+  // Configuration params
   float shunt_resistance_ohm_;
   float battery_capacity_mah_;
-  AlccMode alcc_pin_mode_{AlccMode::ALCC_MODE_ALERT};
-  CcPrescaleValue clmb_cnt_prescale_value_{CcPrescaleValue::PRESCALE_DEFAULT};
-  SplitShort accum_chg_;
-  SplitShort chg_thld_hi_{0xFFFF};
-  SplitShort chg_thld_lo_{0x0000};
-  SplitShort voltage_;
-  SplitShort voltage_thld_hi_{0xFFFF};
-  SplitShort voltage_thld_lo_{0x0000};
-  SplitShort current_;
-  SplitShort current_thld_hi_{0xFFFF};
-  SplitShort current_thld_lo_{0x0000};
-  SplitShort temperature_;
-  uint8_t temperatre_thld_hi{0xFF};
-  uint8_t temperatre_thld_lo{0x00};
+  AlccMode alcc_pin_mode_;
+  CcPrescaleValue clmb_cnt_prescale_value_;
+  float q_lsb_{0.000340F};
+  // Alert threshold parameters
+  float chg_thld_hi_{100.0F};
+  float chg_thld_lo_{0.0F};
+  float voltage_thld_hi_{23.6F};
+  float voltage_thld_lo_{0.0F};
+  float current_thld_hi_{FLT_MAX};
+  float current_thld_lo_{-1.0 * FLT_MAX};
+  float temperatre_thld_hi_{FLT_MAX};
+  float temperatre_thld_lo_{-1.0 * FLT_MAX};
+  // Sensors
+  sensor::Sensor *bat_soc_sensor_{nullptr};
   sensor::Sensor *bat_voltage_sensor_{nullptr};
-  sensor::Sensor *current_sensor_{nullptr};
+  sensor::Sensor *bat_current_sensor_{nullptr};
   sensor::Sensor *temperature_sensor_{nullptr};
+
+  //------------------------------
+  // Conversion Functions
+  //------------------------------
+  float adc_cnt_to_mah_consumed_(uint16_t adc_code);
+  uint16_t soc_percent_to_mah_adc_cnt_(uint8_t soc, float capacity);
+  float adc_cnt_to_voltage_(uint16_t adc_code);
+  uint16_t voltage_to_adc_cnt_(float voltage);
+  float adc_cnt_to_current_(uint16_t adc_code, float resistor);
+  uint16_t current_to_adc_cnt_(float current, float resistor);
+  float adc_cnt_to_celcius_temperature_(uint16_t adc_code);
+  uint8_t celcius_temperature_to_thld_code_(float temperature);
 };
 
 }  // namespace ltc2943
