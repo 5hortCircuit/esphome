@@ -1,0 +1,21 @@
+i2c:
+  - id: i2c_ltc2943
+    scl: 5
+    sda: 4
+
+sensor:
+  - platform: ltc2943
+    address: 0x64
+    update_interval: 15s
+    shunt_resistance: 0.050 Ohm
+    battery_capacity: 5920
+    alcc_mode: DISABLED
+    prescaler: 4096
+    battery_level:
+      name: "Battery SOC"
+    voltage:
+      name: "Battery Voltage"
+    current:
+      name: "Battery Current"
+    temperature:
+      name: "LTC2943 Temperature"
