@@ -94,13 +94,13 @@ void LTC2943Component::setup() {
     return;
   }
 
-  uint8_t value[2] = {0xFF, 0xFF};
-  error = this->write_register(LTC2943_REGISTER_ACCUM_CHG_MSB, &value[0], 2, false);
-  if (error != esphome::i2c::ERROR_OK) {
-    ESP_LOGCONFIG(TAG, "Accum Chg Init error; I2C code: %d", error);
-    this->mark_failed();
-    return;
-  }
+  //uint8_t value[2] = {0xFF, 0xFF};
+  //error = this->write_register(LTC2943_REGISTER_ACCUM_CHG_MSB, &value[0], 2, false);
+  //if (error != esphome::i2c::ERROR_OK) {
+  //  ESP_LOGCONFIG(TAG, "Accum Chg Init error; I2C code: %d", error);
+  //  this->mark_failed();
+  //  return;
+  //}
 
   // Turn back on
   ctrlReg.shutdown = 0;  // B[0]   - Shutdown 0=Run 1=Off
